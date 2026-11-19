@@ -1,0 +1,26 @@
+# Added by Pixee for C/C++ triage benchmarks (ISS-9982). Runs only on manual dispatch.
+name: Sonar scan
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  sonar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SONAR_HOST_URL: https://sonarcloud.io
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: sudo apt-get update && sudo apt-get install -y libboost-dev
+      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DQL_BUILD_EXAMPLES=OFF -DQL_BUILD_TEST_SUITE=OFF
+      - uses: SonarSource/sonarqube-scan-action@v8.4.1
+        with:
+          args: >
+            -Dsonar.organization=pixee-sandbox
+            -Dsonar.projectKey=PixeeSandbox_QuantLib-commit-8e321c4
+            -Dsonar.sources=ql
+            -Dsonar.cfamily.compile-commands=build/compile_commands.json
